@@ -85,10 +85,8 @@ class UserManager:
                     )
             temp_file.replace(self.file_path)
         except OSError as exc:
+            temp_file.unlink(missing_ok=True)
             raise UserManagementError(f"No se pudo escribir el archivo: {exc}") from exc
-        finally:
-            if temp_file.exists():
-                temp_file.unlink(missing_ok=True)
 
     def add_user(self, user_id: int, name: str, email: str, age: int) -> None:
         user_id, name, email, age = self._normalize_and_validate_user(

@@ -21,6 +21,12 @@ class UserManagerTests(unittest.TestCase):
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]["name"], "Ana")
 
+    def test_normalizes_name_and_email(self) -> None:
+        self.manager.add_user(1, "  Ana  ", "  ana@example.com  ", 25)
+        user = self.manager.list_users()[0]
+        self.assertEqual(user["name"], "Ana")
+        self.assertEqual(user["email"], "ana@example.com")
+
     def test_reject_invalid_email(self) -> None:
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "Ana", "invalid-email", 25)
