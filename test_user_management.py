@@ -66,6 +66,10 @@ class UserManagerTests(unittest.TestCase):
         with self.assertRaises(UserNotFoundError):
             self.manager.find_user(1)
 
+    def test_delete_non_existent_user_raises_error(self) -> None:
+        with self.assertRaises(UserNotFoundError):
+            self.manager.delete_user(999)
+
 
 if __name__ == "__main__":
     unittest.main()

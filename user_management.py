@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 EMAIL_PATTERN = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+MAX_AGE = 120
 
 
 class UserManagementError(Exception):
@@ -27,14 +28,18 @@ class UserManager:
         except OSError as exc:
             raise UserManagementError(f"No se pudo inicializar el archivo: {exc}") from exc
 
+    @staticmethod
+    def _validate_user_id(user_id: int) -> None:
+        if not isinstance(user_id, int) or user_id <= 0:
+            raise ValidationError("El ID debe ser un entero positivo.")
+
     def _normalize_and_validate_user(
         self, user_id: int, name: str, email: str, age: int
     ) -> tuple[int, str, str, int]:
         normalized_name = name.strip() if isinstance(name, str) else name
         normalized_email = email.strip() if isinstance(email, str) else email
 
-        if not isinstance(user_id, int) or user_id <= 0:
-            raise ValidationError("El ID debe ser un entero positivo.")
+        self._validate_user_id(user_id)
 
         if not isinstance(normalized_name, str) or not normalized_name or "|" in normalized_name:
             raise ValidationError("El nombre es obligatorio y no puede contener '|'.")
@@ -42,8 +47,8 @@ class UserManager:
         if not isinstance(normalized_email, str) or not EMAIL_PATTERN.match(normalized_email):
             raise ValidationError("El correo electrónico no es válido.")
 
-        if not isinstance(age, int) or age < 0 or age > 120:
-            raise ValidationError("La edad debe ser un número entre 0 y 120.")
+        if not isinstance(age, int) or age < 0 or age > MAX_AGE:
+            raise ValidationError(f"La edad debe ser un número entre 0 y {MAX_AGE}.")
 
         return user_id, normalized_name, normalized_email, age
 
@@ -104,8 +109,7 @@ class UserManager:
         return self._read_users()
 
     def find_user(self, user_id: int) -> dict[str, object]:
-        if not isinstance(user_id, int) or user_id <= 0:
-            raise ValidationError("El ID debe ser un entero positivo.")
+        self._validate_user_id(user_id)
 
         for user in self._read_users():
             if user["id"] == user_id:
@@ -113,8 +117,7 @@ class UserManager:
         raise UserNotFoundError("Usuario no encontrado.")
 
     def delete_user(self, user_id: int) -> None:
-        if not isinstance(user_id, int) or user_id <= 0:
-            raise ValidationError("El ID debe ser un entero positivo.")
+        self._validate_user_id(user_id)
 
         users = self._read_users()
         filtered_users = [user for user in users if user["id"] != user_id]
