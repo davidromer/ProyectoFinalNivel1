@@ -27,7 +27,9 @@ class UserManager:
         except OSError as exc:
             raise UserManagementError(f"No se pudo inicializar el archivo: {exc}") from exc
 
-    def _validate_user(self, user_id: int, name: str, email: str, age: int) -> None:
+    def _normalize_and_validate_user(
+        self, user_id: int, name: str, email: str, age: int
+    ) -> tuple[int, str, str, int]:
         normalized_name = name.strip() if isinstance(name, str) else name
         normalized_email = email.strip() if isinstance(email, str) else email
 
@@ -37,15 +39,13 @@ class UserManager:
         if not isinstance(normalized_name, str) or not normalized_name or "|" in normalized_name:
             raise ValidationError("El nombre es obligatorio y no puede contener '|'.")
 
-        if (
-            not isinstance(normalized_email, str)
-            or ".." in normalized_email
-            or not EMAIL_PATTERN.match(normalized_email)
-        ):
+        if not isinstance(normalized_email, str) or not EMAIL_PATTERN.match(normalized_email):
             raise ValidationError("El correo electrónico no es válido.")
 
         if not isinstance(age, int) or age < 0 or age > 120:
             raise ValidationError("La edad debe ser un número entre 0 y 120.")
+
+        return user_id, normalized_name, normalized_email, age
 
     def _read_users(self) -> list[dict[str, object]]:
         users: list[dict[str, object]] = []
@@ -76,23 +76,30 @@ class UserManager:
         return users
 
     def _write_users(self, users: list[dict[str, object]]) -> None:
+        temp_file = self.file_path.with_name(f"{self.file_path.name}.tmp")
         try:
-            with self.file_path.open("w", encoding="utf-8") as file:
+            with temp_file.open("w", encoding="utf-8") as file:
                 for user in users:
                     file.write(
                         f"{user['id']}|{user['name']}|{user['email']}|{user['age']}\n"
                     )
+            temp_file.replace(self.file_path)
         except OSError as exc:
             raise UserManagementError(f"No se pudo escribir el archivo: {exc}") from exc
+        finally:
+            if temp_file.exists():
+                temp_file.unlink(missing_ok=True)
 
     def add_user(self, user_id: int, name: str, email: str, age: int) -> None:
-        self._validate_user(user_id, name, email, age)
+        user_id, name, email, age = self._normalize_and_validate_user(
+            user_id, name, email, age
+        )
         users = self._read_users()
 
         if any(user["id"] == user_id for user in users):
             raise ValidationError("Ya existe un usuario con ese ID.")
 
-        users.append({"id": user_id, "name": name.strip(), "email": email.strip(), "age": age})
+        users.append({"id": user_id, "name": name, "email": email, "age": age})
         self._write_users(users)
 
     def list_users(self) -> list[dict[str, object]]:

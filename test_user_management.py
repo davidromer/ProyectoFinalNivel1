@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from user_management import UserManager, UserNotFoundError, ValidationError
+from user_management import UserManagementError, UserManager, UserNotFoundError, ValidationError
 
 
 class UserManagerTests(unittest.TestCase):
@@ -30,17 +30,26 @@ class UserManagerTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "Ana2", "ana2@example.com", 30)
 
-    def test_reject_invalid_age(self) -> None:
+    def test_reject_negative_age(self) -> None:
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "Ana", "ana@example.com", -1)
+
+    def test_reject_age_above_maximum(self) -> None:
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "Ana", "ana@example.com", 121)
 
-    def test_reject_invalid_name(self) -> None:
+    def test_reject_empty_name(self) -> None:
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "   ", "ana@example.com", 25)
+
+    def test_reject_name_with_pipe_character(self) -> None:
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "Ana|Ruiz", "ana@example.com", 25)
+
+    def test_malformed_file_data_raises_error(self) -> None:
+        self.file_path.write_text("bad|row\n", encoding="utf-8")
+        with self.assertRaises(UserManagementError):
+            self.manager.list_users()
 
     def test_find_and_delete_user(self) -> None:
         self.manager.add_user(1, "Ana", "ana@example.com", 25)
