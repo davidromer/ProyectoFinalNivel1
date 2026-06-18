@@ -1,0 +1,4 @@
+ID|NOMBRE|EDAD|CORREO|TELEFONO|REGISTRADO
+1|Dav Romero|40|davidromer25@outlook.com|3258976412|2026-06-10 20:29:03
+2|Peptido Perez|50|peptido@gmail.com|3234569871|2026-06-15 20:43:53
+3|Andres Arenas|30|andresaren@gmail.com|3214567890|2026-06-15 20:54:43
