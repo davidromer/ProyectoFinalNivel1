@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 
-EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+EMAIL_PATTERN = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 
 
 class UserManagementError(Exception):
@@ -28,13 +28,20 @@ class UserManager:
             raise UserManagementError(f"No se pudo inicializar el archivo: {exc}") from exc
 
     def _validate_user(self, user_id: int, name: str, email: str, age: int) -> None:
+        normalized_name = name.strip() if isinstance(name, str) else name
+        normalized_email = email.strip() if isinstance(email, str) else email
+
         if not isinstance(user_id, int) or user_id <= 0:
             raise ValidationError("El ID debe ser un entero positivo.")
 
-        if not isinstance(name, str) or not name.strip() or "|" in name:
+        if not isinstance(normalized_name, str) or not normalized_name or "|" in normalized_name:
             raise ValidationError("El nombre es obligatorio y no puede contener '|'.")
 
-        if not isinstance(email, str) or not EMAIL_PATTERN.match(email):
+        if (
+            not isinstance(normalized_email, str)
+            or ".." in normalized_email
+            or not EMAIL_PATTERN.match(normalized_email)
+        ):
             raise ValidationError("El correo electrónico no es válido.")
 
         if not isinstance(age, int) or age < 0 or age > 120:
@@ -85,7 +92,7 @@ class UserManager:
         if any(user["id"] == user_id for user in users):
             raise ValidationError("Ya existe un usuario con ese ID.")
 
-        users.append({"id": user_id, "name": name.strip(), "email": email, "age": age})
+        users.append({"id": user_id, "name": name.strip(), "email": email.strip(), "age": age})
         self._write_users(users)
 
     def list_users(self) -> list[dict[str, object]]:

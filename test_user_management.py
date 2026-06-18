@@ -25,6 +25,23 @@ class UserManagerTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.manager.add_user(1, "Ana", "invalid-email", 25)
 
+    def test_reject_duplicate_id(self) -> None:
+        self.manager.add_user(1, "Ana", "ana@example.com", 25)
+        with self.assertRaises(ValidationError):
+            self.manager.add_user(1, "Ana2", "ana2@example.com", 30)
+
+    def test_reject_invalid_age(self) -> None:
+        with self.assertRaises(ValidationError):
+            self.manager.add_user(1, "Ana", "ana@example.com", -1)
+        with self.assertRaises(ValidationError):
+            self.manager.add_user(1, "Ana", "ana@example.com", 121)
+
+    def test_reject_invalid_name(self) -> None:
+        with self.assertRaises(ValidationError):
+            self.manager.add_user(1, "   ", "ana@example.com", 25)
+        with self.assertRaises(ValidationError):
+            self.manager.add_user(1, "Ana|Ruiz", "ana@example.com", 25)
+
     def test_find_and_delete_user(self) -> None:
         self.manager.add_user(1, "Ana", "ana@example.com", 25)
         found = self.manager.find_user(1)

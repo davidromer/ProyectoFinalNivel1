@@ -14,12 +14,11 @@ Se implementó un sistema en Python 3 con:
 ## Ejecutar la aplicación
 
 ```bash
-python /home/runner/work/ProyectoFinalNivel1/ProyectoFinalNivel1/user_management.py
+python user_management.py
 ```
 
 ## Ejecutar pruebas
 
 ```bash
-cd /home/runner/work/ProyectoFinalNivel1/ProyectoFinalNivel1
 python -m unittest
 ```
